@@ -1,52 +1,69 @@
 import discord
-import configparser
+from discord.ext import commands
 import aiohttp
 import re
 import sys
 import traceback
 import os
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String
 
-# Setting up the config if none is found
-config = configparser.ConfigParser()
-if not os.path.exists('config.ini'):
-    print("No config file found, regenerating config.ini.")
 
-    # Default values for the config
-    botconfig['GLOBAL'] = {'owner_id': '141695444995670017',
-                       'stars': '7',
-                       'downstars': '5',
-                       'upvotes': '27',
-                       'downvotes': '6',
-                       'upvote_emoji': ':upvote:335141910773628928',
-                       'downvote_emoji': ':downvote:335141916989456384',
-                       'upvote_emoji_id': '335141910773628928',
-                       'downvote_emoji_id': '335141916989456384',
-                       'use_test_guild': 'false'}
-    botconfig['Meme Economy'] = {'guild_id': '231084230808043522',
-                             'shitposting_id': '300377971234177024',
-                             'memes_id': '313400507743862794',
-                             'worst_of_id': '395695465955328000',
-                             'best_of_id': '300792095688491009',
-                             'mod_log_id': '318907499753242634'}
-    botconfig['Test Server'] = {'guild_id': '277294377548775425',
-                            'shitposting_id': '396748832932626433',
-                            'memes_id': '396748843397414914',
-                            'worst_of_id': '396748875362336779',
-                            'best_of_id': '396748860174630912',
-                            'mod_log_id': '538088043245207563'}
-    with open('config.ini', 'w') as configfile:
-        config.write(configfile)
-botconfig.read('config.ini')
+
+# SQL Alchemy config
+engine = create_engine('sqlite:///database.db', echo=True)
+Base = declarative_base()
+
+
+class Global(Base):
+    __tablename__ = 'global'
+
+    owner_id = Column(Integer, primary_key=True)
+    upvote_emoji = Column(String)
+    upvote_emoji_id = Column(Integer)
+    downvote_emoji = Column(String)
+    downvote_emoji_id = Column(Integer)
+
+    def __repr__(self):
+        return "Global(owner_id='%s', upvote_emoji='%s', upvote_emoji_id='%s', downvote_emoji='%s'," \
+               " downvote_emoji_id='%s')>" % (
+                self.owner_id, self.upvote_emoji, self.upvote_emoji_id, self.downvote_emoji, self.downvote_emoji_id)
+
+
+class Server(Base):
+    __tablename__ = 'servers'
+
+    id = Column(Integer, primary_key=True)
+    shitposting_id = Column(Integer)
+    memes_id = Column(Integer)
+    worst_of_id = Column(Integer)
+    best_of_id = Column(Integer)
+    mod_log_id = Column(Integer)
+    stars = Column(Integer)
+    downstars = Column(Integer)
+    upvotes = Column(Integer)
+    downvotes = Column(Integer)
+
+    def __repr__(self):
+        return "Server(<id='%s', shitposting_id='%s', memes_id='%s', worst_of_id='%s', best_of_id='%s'," \
+               " mod_log_id='%s', stars='%s', downstars='%s', upvotes='%s', downvotes='%s')>" % (
+                self.id, self.shitposting_id, self.memes_id, self.worst_of_id, self.best_of_id, self.mod_log_id,
+                self.stars, self.downstars, self.upvotes, self.downvotes)
+
+
+Base.metadata.create_all(engine)
 
 # Instantiate the bot object
 bot = commands.Bot(command_prefix=';')
 
 # Display this message upon startup
-@bot.event()
+@bot.event
 async def on_ready():
-    print(f"Gordon Ramsay is online on {bot.user.name}, id{bot.user.id}.")
+    print(f"Gordon Ramsay is online on {bot.user.name}, id {bot.user.id}.")
 
 # Load startup cogs
+initial_extensions=['cogs.config']
 if __name__ == '__main__':
     for extension in initial_extensions:
         print(f'Loading {extension}.')

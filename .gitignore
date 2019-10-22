@@ -4,3 +4,4 @@ utils/__pycache__/
 venv
 .idea
 config.ini
+database.db

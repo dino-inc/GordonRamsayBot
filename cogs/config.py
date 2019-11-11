@@ -7,6 +7,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
 from sqlalchemy import exc
 
+
 Base = declarative_base()
 engine = create_engine('sqlite:///database.db')
 
@@ -61,35 +62,111 @@ class Config(commands.Cog):
     @commands.is_owner()
     async def config(self, ctx):
         session = self.Session()
-        server_object = Server(id = ctx.guild.id)
+        server_object = Server(id=ctx.guild.id)
         try:
             session.add(server_object)
             session.commit()
         except exc.IntegrityError:
             session.rollback()
-            await ctx.send(session.query(Server).filter_by(id=ctx.guild.id).first().id)
+            await ctx.send(f"This server({session.query(Server).filter_by(id=ctx.guild.id).first().id})"
+                           f" has already been created in the database.")
             session.close()
-            await ctx.send("This server has already been created in the database.")
             return
-        except:
-            session.rollback()
-            session.close()
-            await ctx.send("Something went horribly wrong.")
-            return
-        session.close()
+
         await ctx.send(f"Server {ctx.guild.name} added to the database.")
 
     # Sets the number of upvotes for best_of.
-    @config.command(name="set_upvotes",
-                      help = "Sets the number of upvotes required for best_of in the server",
-                      brief = "Sets upvotes for the memes channel.")
+    @config.command(name="upvotes",
+                    help="Sets the number of upvotes required for best_of in the server",
+                    brief="Sets upvotes for the memes channel.")
     @commands.is_owner()
-    async def set_upvotes(self, ctx, upvote_count):
+    async def upvotes(self, ctx, upvote_count):
         session = self.Session()
-        server_object = session.query(Server).filter_by(id=ctx.guild.id).first()
-        server_object.upvotes = upvote_count
+        server_vars = get_server_ob(ctx, session)
+
+        old_value = server_vars.upvotes
+        server_vars.upvotes = upvote_count
+        session.commit()
+        print(f"{ctx.author.name} (ID:  {ctx.author.id}) changed upvotes for best_of from"
+              f" {old_value} to {server_vars.upvotes}")
+        await ctx.send(f"Changed the best_of upvote threshold from {old_value} to {server_vars.upvotes}")
         session.close()
-        await ctx.send("upvotes... set. Maybe?")
+
+    @config.command(name="downvotes",
+                    help="Sets the number of downvotes required to delete a meme in the meme channel",
+                    brief="Sets downvotes for the meme channel.")
+    @commands.is_owner()
+    async def downvotes(self, ctx, downvote_count):
+        session = self.Session()
+        server_vars = get_server_ob(ctx, session)
+
+        old_value = server_vars.downvotes
+        server_vars.downvotes = downvote_count
+        session.commit()
+        print(f"{ctx.author.name} (ID:  {ctx.author.id}) changed downvotes for deletion from"
+              f" {old_value} to {server_vars.downvotes}")
+        await ctx.send(f"Changed the deletion threshold from {old_value} to {server_vars.downvotes}")
+        session.close()
+
+    @config.command(name="stars",
+                    help="Sets the number of stars required for best_of in the server",
+                    brief="Sets stars for the server.")
+    @commands.is_owner()
+    async def stars(self, ctx, star_count):
+        session = self.Session()
+        server_vars = get_server_ob(ctx, session)
+
+        old_value = server_vars.stars
+        server_vars.stars = star_count
+        session.commit()
+        print(f"{ctx.author.name} (ID:  {ctx.author.id}) changed stars for best_of from"
+              f" {old_value} to {server_vars.downstars}")
+        await ctx.send(f"Changed the best_of star threshold from {old_value} to {server_vars.stars}")
+        session.close()
+
+    @config.command(name="downstars",
+                    help="Sets the number of downstars required to send a post to worst_of in the server",
+                    brief="Sets worst_of stars for the memes channel.")
+    @commands.is_owner()
+    async def downstars(self, ctx, downstar_count):
+        session = self.Session()
+        server_vars = get_server_ob(ctx, session)
+
+        old_value = server_vars.downstars
+        server_vars.downstars = downstar_count
+        session.commit()
+        print(f"{ctx.author.name} (ID:  {ctx.author.id}) changed downstars for worst_of from"
+              f" {old_value} to {server_vars.downstars}")
+        await ctx.send(f"Changed the worst_of star threshold from {old_value} to {server_vars.downstars}")
+        session.close()
+
+    @config.command()
+    @commands.is_owner()
+    async def channels(self, ctx):
+
+        def check_inline(message):
+            if message.author.id == ctx.author.id:
+                return True
+            else:
+                return False
+
+        channels = ['shitposting_id', 'memes_id', 'worst_of_id']
+        session = self.Session()
+        server_vars = get_server_ob(ctx, session)
+
+        await ctx.send("What is the shitposting channel?")
+        try:
+            choice = await self.bot.wait_for('message', check = check_inline, timeout = 30)
+        except TimeoutError:
+            await ctx.send("No input found, exiting channel config.")
+            session.close()
+            return
+
+        session.close()
+
+
+def get_server_ob(ctx, session):
+    return session.query(Server).filter_by(id=ctx.guild.id).first()
 
 
 

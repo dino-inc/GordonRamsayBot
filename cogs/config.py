@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
 from sqlalchemy import exc
-
+import asyncio
 
 Base = declarative_base()
 engine = create_engine('sqlite:///database.db')
@@ -143,29 +143,10 @@ class Config(commands.Cog):
     @config.command()
     @commands.is_owner()
     async def channels(self, ctx):
-
-        def check_inline(message):
-            if message.author.id == ctx.author.id:
-                return True
-            else:
-                return False
-
         channels = ['shitposting', 'memes', 'worst_of', 'best_of', 'mod_log']
         session = self.Session()
         server_vars = get_server_ob(ctx, session)
-        composite_msg = ""
-        for channel_name in channels:
-            composite_msg += f"What is the {channel_name} channel?"
-            await ctx.send(composite_msg)
-            try:
-                choice = await self.bot.wait_for('message', check = check_inline, timeout = 30)
-            except futures.TimeoutError:
-                await ctx.send("No input found, exiting channel config.")
-                session.close()
-                return
-            setattr(server_vars, f"{channel_name}_id", choice.content)
-            composite_msg = f"Set {channel_name}'s ID to `{choice.content}`\n"
-        await ctx.send(composite_msg)
+        await multi_user_input(ctx, self, session, channels, "channel ID")
 
         verification_msg = ""
         for channel_name in channels:
@@ -183,6 +164,31 @@ class Config(commands.Cog):
 
 def get_server_ob(ctx, session):
     return session.query(Server).filter_by(id=ctx.guild.id).first()
+
+
+async def multi_user_input(ctx, self, session, item_array, data_type_name):
+    # Ensures the responding user matches the one who started the command
+    def verify_user(message):
+        if message.author == ctx.message.author:
+            return True
+        else:
+            return False
+
+    server_vars = get_server_ob(ctx, session)
+    composite_msg = ""
+    for item_name in item_array:
+        composite_msg += f"What is the {item_name} {data_type_name}?"
+        await ctx.send(composite_msg)
+        try:
+            choice = await self.bot.wait_for('message', check=verify_user, timeout=5)
+        except asyncio.TimeoutError:
+            await ctx.send(f"No input found, exiting {data_type_name} config.")
+            session.close()
+            return
+        setattr(server_vars, f"{item_name}_id", choice.content)
+        composite_msg = f"Set {item_name}'s ID to `{choice.content}`\n"
+    await ctx.send(composite_msg)
+
 
 
 

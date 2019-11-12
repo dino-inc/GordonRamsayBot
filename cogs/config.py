@@ -150,19 +150,35 @@ class Config(commands.Cog):
             else:
                 return False
 
-        channels = ['shitposting_id', 'memes_id', 'worst_of_id']
+        channels = ['shitposting', 'memes', 'worst_of', 'best_of', 'mod_log']
         session = self.Session()
         server_vars = get_server_ob(ctx, session)
+        composite_msg = ""
+        for channel_name in channels:
+            composite_msg += f"What is the {channel_name} channel?"
+            await ctx.send(composite_msg)
+            try:
+                choice = await self.bot.wait_for('message', check = check_inline, timeout = 30)
+            except futures.TimeoutError:
+                await ctx.send("No input found, exiting channel config.")
+                session.close()
+                return
+            setattr(server_vars, f"{channel_name}_id", choice.content)
+            composite_msg = f"Set {channel_name}'s ID to `{choice.content}`\n"
+        await ctx.send(composite_msg)
 
-        await ctx.send("What is the shitposting channel?")
-        try:
-            choice = await self.bot.wait_for('message', check = check_inline, timeout = 30)
-        except TimeoutError:
-            await ctx.send("No input found, exiting channel config.")
-            session.close()
-            return
-
+        verification_msg = ""
+        for channel_name in channels:
+            id_attr = getattr(server_vars, f"{channel_name}_id")
+            verification_msg += f"{channel_name}: `{id_attr}`\n"
+        await ctx.send(verification_msg)
         session.close()
+
+    @config.command()
+    @commands.is_owner()
+    async def globals(self, ctx):
+        session = self.Session()
+        server_vars = get_server_ob(ctx, session)
 
 
 def get_server_ob(ctx, session):

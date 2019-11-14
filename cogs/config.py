@@ -72,69 +72,15 @@ class Config(commands.Cog):
 
         await ctx.send(f"Server {ctx.guild.name} added to the database.")
 
-    # Sets the number of upvotes for best_of.
-    @config.command(name="upvotes",
-                    help="Sets the number of upvotes required for best_of in the server",
-                    brief="Sets upvotes for the memes channel.")
+    @config.command()
     @commands.is_owner()
-    async def upvotes(self, ctx, upvote_count):
+    async def set_server_var(self, ctx, var_name, var_value):
         session = self.Session()
         server_vars = get_server_ob(ctx, session)
-
-        old_value = server_vars.upvotes
-        server_vars.upvotes = upvote_count
-        session.commit()
-        print(f"{ctx.author.name} (ID:  {ctx.author.id}) changed upvotes for best_of from"
-              f" {old_value} to {server_vars.upvotes}")
-        await ctx.send(f"Changed the best_of upvote threshold from {old_value} to {server_vars.upvotes}")
-        session.close()
-
-    @config.command(name="downvotes",
-                    help="Sets the number of downvotes required to delete a meme in the meme channel",
-                    brief="Sets downvotes for the meme channel.")
-    @commands.is_owner()
-    async def downvotes(self, ctx, downvote_count):
-        session = self.Session()
-        server_vars = get_server_ob(ctx, session)
-
-        old_value = server_vars.downvotes
-        server_vars.downvotes = downvote_count
-        session.commit()
-        print(f"{ctx.author.name} (ID:  {ctx.author.id}) changed downvotes for deletion from"
-              f" {old_value} to {server_vars.downvotes}")
-        await ctx.send(f"Changed the deletion threshold from {old_value} to {server_vars.downvotes}")
-        session.close()
-
-    @config.command(name="stars",
-                    help="Sets the number of stars required for best_of in the server",
-                    brief="Sets stars for the server.")
-    @commands.is_owner()
-    async def stars(self, ctx, star_count):
-        session = self.Session()
-        server_vars = get_server_ob(ctx, session)
-
-        old_value = server_vars.stars
-        server_vars.stars = star_count
-        session.commit()
-        print(f"{ctx.author.name} (ID:  {ctx.author.id}) changed stars for best_of from"
-              f" {old_value} to {server_vars.downstars}")
-        await ctx.send(f"Changed the best_of star threshold from {old_value} to {server_vars.stars}")
-        session.close()
-
-    @config.command(name="downstars",
-                    help="Sets the number of downstars required to send a post to worst_of in the server",
-                    brief="Sets worst_of stars for the memes channel.")
-    @commands.is_owner()
-    async def downstars(self, ctx, downstar_count):
-        session = self.Session()
-        server_vars = get_server_ob(ctx, session)
-
-        old_value = server_vars.downstars
-        server_vars.downstars = downstar_count
-        session.commit()
-        print(f"{ctx.author.name} (ID:  {ctx.author.id}) changed downstars for worst_of from"
-              f" {old_value} to {server_vars.downstars}")
-        await ctx.send(f"Changed the worst_of star threshold from {old_value} to {server_vars.downstars}")
+        old_value = getattr(server_vars, f"{var_name}")
+        setattr(server_vars, f"{var_name}", var_value)
+        await ctx.send(f"Changed the value from {old_value} to {getattr(server_vars, f'{var_name}')}.")
+        print(server_vars)
         session.close()
 
     @config.command()
@@ -191,7 +137,6 @@ async def multi_user_input(ctx, self, session, item_array, data_type_name):
         setattr(server_vars, f"{item_name}_id", choice.content)
         composite_msg = f"Set {item_name}'s ID to `{choice.content}`\n"
     await ctx.send(composite_msg)
-
 
 
 

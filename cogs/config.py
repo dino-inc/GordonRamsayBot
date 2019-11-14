@@ -60,8 +60,10 @@ class Config(commands.Cog):
     async def config(self, ctx):
         session = self.Session()
         server_object = Server(id=ctx.guild.id)
+        global_object = Global(owner_id=ctx.author.id)
         try:
             session.add(server_object)
+            session.add(global_object)
             session.commit()
         except exc.IntegrityError:
             session.rollback()
@@ -110,6 +112,14 @@ class Config(commands.Cog):
             verification_msg += f"{var_name}: `{id_attr}`\n"
         await ctx.send(verification_msg)
         session.close()
+
+    @config.command()
+    @commands.is_owner()
+    async def print(self, ctx):
+        session = self.Session()
+        server_vars = get_server_ob(ctx, session)
+        global_vars = session.query(Global).filter_by(owner_id=ctx.author.id).first()
+        await ctx.send(global_vars +'\n'+ server_vars)
 
 def get_server_ob(ctx, session):
     return session.query(Server).filter_by(id=ctx.guild.id).first()

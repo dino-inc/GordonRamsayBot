@@ -15,15 +15,12 @@ class Global(Base):
     __tablename__ = 'global_vars'
 
     owner_id = Column(Integer, primary_key=True)
-    upvote_emoji = Column(String)
     upvote_emoji_id = Column(Integer)
-    downvote_emoji = Column(String)
     downvote_emoji_id = Column(Integer)
 
     def __repr__(self):
-        return "Global(owner_id='%s', upvote_emoji='%s', upvote_emoji_id='%s', downvote_emoji='%s'," \
-               " downvote_emoji_id='%s')>" % (
-                self.owner_id, self.upvote_emoji, self.upvote_emoji_id, self.downvote_emoji, self.downvote_emoji_id)
+        return "Global(owner_id='%s', upvote_emoji_id='%s',downvote_emoji_id='%s')>" % (
+                self.owner_id, self.upvote_emoji_id, self.downvote_emoji_id)
 
 
 class Server(Base):
@@ -147,7 +144,6 @@ class Config(commands.Cog):
         session = self.Session()
         server_vars = get_server_ob(ctx, session)
         await multi_user_input(ctx, self, session, channels, "channel ID")
-
         verification_msg = ""
         for channel_name in channels:
             id_attr = getattr(server_vars, f"{channel_name}_id")
@@ -158,9 +154,16 @@ class Config(commands.Cog):
     @config.command()
     @commands.is_owner()
     async def globals(self, ctx):
+        global_vars = ['owner', 'upvote_emoji', 'downvote_emoji']
         session = self.Session()
         server_vars = get_server_ob(ctx, session)
-
+        await multi_user_input(ctx, self, session, global_vars, "global variable")
+        verification_msg = ""
+        for var_name in global_vars:
+            id_attr = getattr(server_vars, f"{var_name}_id")
+            verification_msg += f"{var_name}: `{id_attr}`\n"
+        await ctx.send(verification_msg)
+        session.close()
 
 def get_server_ob(ctx, session):
     return session.query(Server).filter_by(id=ctx.guild.id).first()
@@ -180,7 +183,7 @@ async def multi_user_input(ctx, self, session, item_array, data_type_name):
         composite_msg += f"What is the {item_name} {data_type_name}?"
         await ctx.send(composite_msg)
         try:
-            choice = await self.bot.wait_for('message', check=verify_user, timeout=5)
+            choice = await self.bot.wait_for('message', check=verify_user, timeout=30)
         except asyncio.TimeoutError:
             await ctx.send(f"No input found, exiting {data_type_name} config.")
             session.close()

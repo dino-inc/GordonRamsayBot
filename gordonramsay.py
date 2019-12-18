@@ -17,10 +17,11 @@ async def on_ready():
     # Load startup cogs
     initial_extensions = ['cogs.config']
     if __name__ == '__main__':
-        for extension in initial_extensions:
-            print(f'Loading {extension}.')
+        for filename in os.listdir('./cog'):
+            filename = os.path.splitext(filename)[0]
+            print(f'Loading cogs.{filename}')
             try:
-                bot.load_extension(extension)
+                bot.load_extension(f'cogs.{filename}')
                 print('Finished loading.')
             except Exception as e:
                 print(f'Failed to load extension {extension}.', file=sys.stderr)

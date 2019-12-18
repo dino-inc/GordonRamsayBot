@@ -19,7 +19,7 @@ class Global(Base):
     downvote_emoji_id = Column(Integer)
 
     def __repr__(self):
-        return "Global(owner_id='%s', upvote_emoji_id='%s',downvote_emoji_id='%s')>" % (
+        return "Global:\n<owner_id='%s',\n upvote_emoji_id='%s',\ndownvote_emoji_id='%s'>" % (
                 self.owner_id, self.upvote_emoji_id, self.downvote_emoji_id)
 
 
@@ -38,8 +38,8 @@ class Server(Base):
     downvotes = Column(Integer)
 
     def __repr__(self):
-        return "Server(<id='%s', shitposting_id='%s', memes_id='%s', worst_of_id='%s', best_of_id='%s'," \
-               " mod_log_id='%s', stars='%s', downstars='%s', upvotes='%s', downvotes='%s')>" % (
+        return "Server:\nid='%s'\n shitposting_id='%s'\n memes_id='%s'\n worst_of_id='%s'\n best_of_id='%s'\n" \
+               " mod_log_id='%s'\n stars='%s'\n downstars='%s'\n upvotes='%s'\n downvotes='%s'" % (
                 self.id, self.shitposting_id, self.memes_id, self.worst_of_id, self.best_of_id, self.mod_log_id,
                 self.stars, self.downstars, self.upvotes, self.downvotes)
 
@@ -76,9 +76,9 @@ class Config(commands.Cog):
 
     @config.command()
     @commands.is_owner()
-    async def set_server_var(self, ctx, var_name, var_value):
+    async def set_server_var(self, ctx, type_name, filter_attr, var_name, var_value):
         session = self.Session()
-        server_vars = get_server_ob(ctx, session)
+        server_vars = session.query(type_name).filter_by(id=ctx.guild.id).first()
         old_value = getattr(server_vars, f"{var_name}")
         setattr(server_vars, f"{var_name}", var_value)
         await ctx.send(f"Changed the value from {old_value} to {getattr(server_vars, f'{var_name}')}.")
@@ -97,6 +97,7 @@ class Config(commands.Cog):
             id_attr = getattr(server_vars, f"{channel_name}_id")
             verification_msg += f"{channel_name}: `{id_attr}`\n"
         await ctx.send(verification_msg)
+        session.commit()
         session.close()
 
     @config.command()
@@ -111,6 +112,7 @@ class Config(commands.Cog):
             id_attr = getattr(server_vars, f"{var_name}_id")
             verification_msg += f"{var_name}: `{id_attr}`\n"
         await ctx.send(verification_msg)
+        session.commit()
         session.close()
 
     @config.command()
@@ -119,7 +121,7 @@ class Config(commands.Cog):
         session = self.Session()
         server_vars = get_server_ob(ctx, session)
         global_vars = session.query(Global).filter_by(owner_id=ctx.author.id).first()
-        await ctx.send(global_vars +'\n'+ server_vars)
+        await ctx.send(str(global_vars) +'\n' + str(server_vars))
 
 def get_server_ob(ctx, session):
     return session.query(Server).filter_by(id=ctx.guild.id).first()

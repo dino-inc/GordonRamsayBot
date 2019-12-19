@@ -14,18 +14,17 @@ bot = commands.Bot(command_prefix=';')
 @bot.event
 async def on_ready():
     print(f"Gordon Ramsay is online on {bot.user.name}, id {bot.user.id}.")
-    # Load startup cogs
-    initial_extensions = ['cogs.config']
     if __name__ == '__main__':
-        for filename in os.listdir('./cog'):
-            filename = os.path.splitext(filename)[0]
-            print(f'Loading cogs.{filename}')
-            try:
-                bot.load_extension(f'cogs.{filename}')
-                print('Finished loading.')
-            except Exception as e:
-                print(f'Failed to load extension {extension}.', file=sys.stderr)
-                traceback.print_exc()
+        for filename in os.listdir('./cogs'):
+            if filename.endswith(".py"):
+                filename = os.path.splitext(filename)[0]
+                print(f'Loading cogs.{filename}')
+                try:
+                    bot.load_extension(f'cogs.{filename}')
+                    print('Finished loading.')
+                except Exception as e:
+                    print(f'Failed to load extension {filename}.', file=sys.stderr)
+                    traceback.print_exc()
 
 
 # Process the commands from each message input

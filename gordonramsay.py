@@ -6,7 +6,6 @@ import sys
 import traceback
 import os
 
-
 # Instantiate the bot object
 bot = commands.Bot(command_prefix=';')
 

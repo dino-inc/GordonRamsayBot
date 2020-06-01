@@ -164,7 +164,7 @@ async def multi_user_input(ctx, self, session, datatype_vars, item_array):
     await ctx.send(composite_msg)
 
 async def get_emoji(ctx, emoji_name, session):
-    tb_object = session.query("Global").first()
+    tb_object = session.query(Global).first()
     emoji_id = getattr(tb_object, f"{emoji_name}")
     session.close()
     return discord.utils.get(ctx.guild.emojis, id=emoji_id)

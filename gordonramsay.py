@@ -15,7 +15,7 @@ async def on_ready():
     print(f"Gordon Ramsay is online on {bot.user.name}, id {bot.user.id}.")
     if __name__ == '__main__':
         for filename in os.listdir('./cogs'):
-            if filename.endswith(".py"):
+            if filename.endswith(".py") and not filename.startswith("__init__"):
                 filename = os.path.splitext(filename)[0]
                 print(f'Loading cogs.{filename}')
                 try:
@@ -24,6 +24,9 @@ async def on_ready():
                 except Exception as e:
                     print(f'Failed to load extension {filename}.', file=sys.stderr)
                     traceback.print_exc()
+            else:
+                pass
+    print("Startup complete.")
 
 
 # Process the commands from each message input

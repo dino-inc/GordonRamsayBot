@@ -24,14 +24,12 @@ class Memes(commands.Cog):
             # Hunt for the URL
             check_text = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',
                                     message.content)
-            print(check_text)
-            # Delete message if the message is more than just a URL
-            if message.content != "":
+            # Check for normal text being posted
+            if message.content == "" or check_text:
                 await addvotes(message, session)
-            # Add emojis if all checks pass
+            # Delete if it is not found to be a URL or image embed
             else:
                 #TODO - add logging
-                #await log_deleted_meme(message)
                 await message.delete()
 
         session.close()

@@ -4,8 +4,8 @@ import re
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-import cogs.modlog as modlog
-import cogs.config as config
+import modlog
+import config
 
 class Memes(commands.Cog):
     def __init__(self, bot):
@@ -18,7 +18,7 @@ class Memes(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         session = self.Session()
-        serverdb = session.query(Server).filter_by(id=message.guild.id).first()
+        serverdb = config.get_server_ob(ctx, session)
         # Check the channel for #memes
         if message.channel.id == serverdb.memes_id:
             # Hunt for the URL

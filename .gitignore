@@ -1,6 +1,7 @@
 token.txt
 cogs/__pycache__/
 utils/__pycache__/
+/__pycache__/
 venv
 .idea
 config.ini

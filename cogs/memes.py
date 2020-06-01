@@ -30,6 +30,7 @@ class Memes(commands.Cog):
             # Delete if it is not found to be a URL or image embed
             else:
                 #TODO - add logging
+                await modlog.log_deleted_meme(message, "Talking in the meme channel", message.content, session)
                 await message.delete()
 
         session.close()

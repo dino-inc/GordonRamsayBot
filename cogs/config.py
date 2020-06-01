@@ -163,6 +163,18 @@ async def multi_user_input(ctx, self, session, datatype_vars, item_array):
         composite_msg = f"Set {item_name}'s ID to `{choice.content}`\n"
     await ctx.send(composite_msg)
 
+async def get_emoji(ctx, emoji_name, session):
+    tb_object = session.query("Global").first()
+    emoji_id = getattr(tb_object, f"{emoji_name}")
+    session.close()
+    return discord.utils.get(ctx.guild.emojis, id=emoji_id)
+
+'''async def get_id_val(ctx, val_name, tb_name, session):
+    tb_object = session.query(tb_name).filter_by(id=ctx.guild.id).first()
+    db_value = getattr(tb_object, f"{val_name}")
+    session.close()
+    return discord.utils.get(ctx.guild.channels, id=db_value)
+'''
 
 
 def setup(bot):

@@ -64,9 +64,9 @@ async def xboard(reaction, reactionthreshold, message, serverdb, pinchannel):
     if check_date(message, 7):
         return
     # Remove self upvotes
-    if message.author == message.guild.get_member(reaction.member.id):
-        await message.remove_reaction(reaction.emoji, message.author)
-        return
+    # if message.author == message.guild.get_member(reaction.member.id):
+        #await message.remove_reaction(reaction.emoji, message.author)
+        #return
     # Iterate through reactions, to find the right one
     reactionlisttarget = None
     for x in message.reactions:
@@ -89,18 +89,24 @@ async def xboard(reaction, reactionthreshold, message, serverdb, pinchannel):
             return
         await pinchannel.send(embed = em)
 async def generate_board_embed(reaction, message, color, title, icon_url):
-    em = discord.Embed(description=message.content + '\n\n[Jump to post](' + message.jump_url + ')',
+    em = discord.Embed(description= message.content,
                        color=color, timestamp=message.created_at)
     em.set_author(name=title, icon_url=icon_url, url=message.jump_url)
     em = await handle_image_embed(em, message)
+    em.add_field(name="\u200b", value='[Jump to post](' + message.jump_url + ')')
     return em
 
 async def handle_image_embed(em, message):
-    try:
-        em.set_image(message.embeds[0].image.url)
-    except:
-        pass
-    return em
+    if len(message.embeds) > 0:
+        em.set_image(url=message.embeds[0].url)
+        return em
+    if len(message.attachments) > 0:
+        attach_list = ""
+        for atta in message.attachments:
+            attach_list += f"{atta.url}\n"
+        em.add_field(name="\u200b", value=f"{attach_list}", inline=True)
+        em.set_image(url=message.attachments[0].url)
+        return em
 
 def check_date(message, days):
     message_age = datetime.datetime.now() - message.created_at

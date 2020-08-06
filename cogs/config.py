@@ -117,6 +117,7 @@ class Config(commands.Cog):
     @config.command()
     @commands.is_owner()
     async def globals(self, ctx):
+
         globals = ['owner_id', 'upvote_emoji_id', 'downvote_emoji_id']
         session = self.Session()
         global_vars = session.query(Global).filter_by(owner_id=ctx.author.id).first()

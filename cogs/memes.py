@@ -41,55 +41,66 @@ class Memes(commands.Cog):
         member = reaction.member
         guild = member.guild
         channel = guild.get_channel(reaction.channel_id)
-        message = channel.get_message(reaction.message_id)
+        message = await channel.fetch_message(reaction.message_id)
         session = self.Session()
         serverdb = config.get_server_ob(message, session)
-
         # worst of
         if reaction.emoji.id == 379319474639208458:
-            await xboard(reaction, serverdb.downstars, message, serverdb)
-        if reaction.emoji.id == '⭐':
-            await xboard(reaction, serverdb.stars, message, serverdb)
+            worstofchannel = guild.get_channel(serverdb.worst_of_id)
+            await xboard(reaction, serverdb.downstars, message, serverdb, worstofchannel)
+        if reaction.emoji.name == '⭐':
+            bestofchannel = guild.get_channel(serverdb.best_of_id)
+            await xboard(reaction, serverdb.stars, message, serverdb, bestofchannel)
         session.close()
 
-async def xboard(reaction, reactionthreshold, message, serverdb):
+async def xboard(reaction, reactionthreshold, message, serverdb, pinchannel):
     # Check to make sure post is eligible for board at all
     if message.channel.id == serverdb.memes_id \
             or message.channel.id == serverdb.best_of_id \
-            or message.channel.id != worst_of_id:
-        await message.remove_reaction(reaction.emoji, member)
+            or message.channel.id == serverdb.worst_of_id:
+        await message.remove_reaction(reaction.emoji, message.author)
         return
     # Check for ancient post reaction
-    if check_date(reaction.message, 7):
+    if check_date(message, 7):
         return
     # Remove self upvotes
-    if message.author == message.guild.get_member(member.id):
-        await message.remove_reaction(reaction.emoji, member)
+    if message.author == message.guild.get_member(reaction.member.id):
+        await message.remove_reaction(reaction.emoji, message.author)
         return
     # Iterate through reactions, to find the right one
     reactionlisttarget = None
     for x in message.reactions:
-        if x.emoji == reaction.emoji:
+        if x.emoji == reaction.emoji.name:
             reactionlisttarget = x
     # Check if required threshold is reached
-    if reactionlisttarget >= reactionthreshold:
-        if reaction.emoji == '⭐':
+    if reactionlisttarget.count >= reactionthreshold:
+        if reaction.emoji.name == '⭐':
             # TODO: read below
-            generate_board_embed(reaction, message, 0xFFD700,
+            em = await generate_board_embed(reaction, message, 0xFFD700,
                                  f'Best of by: {message.author.display_name}',
                                  'https://upload.wikimedia.org/wikipedia/commons/f/f3/Star_Emoji.png')
-        if reaction.emoji.id == 379319474639208458:
+
+        elif reaction.emoji.id == 379319474639208458:
             # TODO: send embed returned
-            generate_board_embed(reaction, message, 0xFF000,
+            em = await generate_board_embed(reaction, message, 0xFF000,
                                  f"Worst of by: {message.author.display_name}",
                                  'http://rottenrat.com/wp-content/uploads/2011/01/Marty-Rathbun-anti-sign.jpg')
-
-def generate_board_embed(reaction, message, color, title, icon_url):
+        else:
+            return
+        await pinchannel.send(embed = em)
+async def generate_board_embed(reaction, message, color, title, icon_url):
     em = discord.Embed(description=message.content + '\n\n[Jump to post](' + message.jump_url + ')',
                        color=color, timestamp=message.created_at)
     em.set_author(name=title, icon_url=icon_url, url=message.jump_url)
+    em = await handle_image_embed(em, message)
     return em
 
+async def handle_image_embed(em, message):
+    try:
+        em.set_image(message.embeds[0].image.url)
+    except:
+        pass
+    return em
 
 def check_date(message, days):
     message_age = datetime.datetime.now() - message.created_at

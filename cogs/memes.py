@@ -87,13 +87,14 @@ async def xboard(reaction, reactionthreshold, message, serverdb, pinchannel):
                                  'http://rottenrat.com/wp-content/uploads/2011/01/Marty-Rathbun-anti-sign.jpg')
         else:
             return
-        await pinchannel.send(embed = em)
+        await pinchannel.send(embed=em)
 async def generate_board_embed(reaction, message, color, title, icon_url):
     em = discord.Embed(description= message.content,
                        color=color, timestamp=message.created_at)
     em.set_author(name=title, icon_url=icon_url, url=message.jump_url)
+    em.set_thumbnail(url=message.author.avatar_url)
     em = await handle_image_embed(em, message)
-    em.add_field(name="\u200b", value='[Jump to post](' + message.jump_url + ')')
+    em.add_field(name="\u200b", value=f"[Jump to post]({message.jump_url})")
     return em
 
 async def handle_image_embed(em, message):
@@ -102,8 +103,17 @@ async def handle_image_embed(em, message):
         return em
     if len(message.attachments) > 0:
         attach_list = ""
+        count = 0
+        embed_type = ""
+        vid_embeddables = (".mp4", ".webm")
+        aud_embeddables = (".wav", ".ogg", ".mp3")
         for atta in message.attachments:
-            attach_list += f"{atta.url}\n"
+            count += 1
+            if atta.url.endswith(vid_embeddables):
+                embed_type = "Video"
+            if atta.url.endswith(aud_embeddables):
+                embed_type = "Audio"
+            attach_list += f"[{embed_type} Link {count}]({atta.url})\n"
         em.add_field(name="\u200b", value=f"{attach_list}", inline=True)
         em.set_image(url=message.attachments[0].url)
         return em

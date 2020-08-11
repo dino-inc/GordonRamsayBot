@@ -45,10 +45,10 @@ class Memes(commands.Cog):
         session = self.Session()
         serverdb = config.get_server_ob(message, session)
         # worst of
-        if reaction.emoji.id == 379319474639208458:
+        if reaction.emoji.id == 726600327205355532:
             worstofchannel = guild.get_channel(serverdb.worst_of_id)
             await xboard(reaction, serverdb.downstars, message, serverdb, worstofchannel)
-        if reaction.emoji.name == '⭐':
+        elif reaction.emoji.name == '⭐':
             bestofchannel = guild.get_channel(serverdb.best_of_id)
             await xboard(reaction, serverdb.stars, message, serverdb, bestofchannel)
         session.close()
@@ -70,7 +70,7 @@ async def xboard(reaction, reactionthreshold, message, serverdb, pinchannel):
     # Iterate through reactions, to find the right one
     reactionlisttarget = None
     for x in message.reactions:
-        if x.emoji == reaction.emoji.name:
+        if x.emoji == reaction.emoji.name or x.emoji == reaction.emoji:
             reactionlisttarget = x
     # Check if required threshold is reached
     if reactionlisttarget.count >= reactionthreshold:
@@ -80,9 +80,9 @@ async def xboard(reaction, reactionthreshold, message, serverdb, pinchannel):
                                  f'Best of by: {message.author.display_name}',
                                  'https://upload.wikimedia.org/wikipedia/commons/f/f3/Star_Emoji.png')
 
-        elif reaction.emoji.id == 379319474639208458:
+        elif reaction.emoji.id == 726600327205355532:
             # TODO: send embed returned
-            em = await generate_board_embed(reaction, message, 0xFF000,
+            em = await generate_board_embed(reaction, message, 0xFF0000,
                                  f"Worst of by: {message.author.display_name}",
                                  'http://rottenrat.com/wp-content/uploads/2011/01/Marty-Rathbun-anti-sign.jpg')
         else:

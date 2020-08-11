@@ -100,7 +100,6 @@ async def generate_board_embed(reaction, message, color, title, icon_url):
 async def handle_image_embed(em, message):
     if len(message.embeds) > 0:
         em.set_image(url=message.embeds[0].url)
-        return em
     if len(message.attachments) > 0:
         attach_list = ""
         count = 0
@@ -116,7 +115,7 @@ async def handle_image_embed(em, message):
             attach_list += f"[{embed_type} Link {count}]({atta.url})\n"
         em.add_field(name="\u200b", value=f"{attach_list}", inline=True)
         em.set_image(url=message.attachments[0].url)
-        return em
+    return em
 
 def check_date(message, days):
     message_age = datetime.datetime.now() - message.created_at
